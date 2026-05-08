@@ -32,7 +32,7 @@ export function calcDateOnDiet(
 
   const weightGainKg = targetWeightKg - currentWeightKg;
 
-  // some qualifications
+  // einige qualifikationen
   if (weightGainKg < 0) {
     throw new Error(`This diet is for gaining weight, not loosing it!`);
   }
@@ -47,25 +47,40 @@ export function calcDateOnDiet(
   }
 
   // bmr berechnen
-  let dailyCaloriesBasicMetabolicRate = 0;
-  if (sex == Sex.Male) {
-    dailyCaloriesBasicMetabolicRate = Math.ceil(
-      // Harris-Benedict-Formula (Male)
-      66.47 + 13.7 * currentWeightKg + 5.003 * heightM * 100.0 - 6.75 * ageY,
-    );
-  } else {
-    dailyCaloriesBasicMetabolicRate = Math.ceil(
-      // Harris-Benedict-Formula (Female)
-      655.1 + 9.563 * currentWeightKg + 1.85 * heightM * 100.0 - 4.676 * ageY,
-    );
+  function calculateBMR(
+    weightKg: number,
+    heightM: number,
+    ageY: number,
+    sex: Sex,
+  ): number {
+    const heightCm = heightM * 100;
+
+    if (sex === Sex.Male) 
+    {        // male
+      return Math.ceil(66.47 + 13.7 * weightKg + 5.003 * heightCm - 6.75 * ageY,);
+    } else { // female
+      return Math.ceil(655.1 + 9.563 * weightKg + 1.85 * heightCm - 4.676 * ageY,);
+    }
   }
 
+const dailyCaloriesBasicMetabolicRate = calculateBMR(
+  currentWeightKg,
+  heightM,
+  ageY,
+  sex,
+);
 
-  const dailyExcessCalories =
-    dailyCaloriesOnDiet - dailyCaloriesBasicMetabolicRate;
-  
-  if (dailyExcessCalories <= 0) {
-    throw new Error("This diet is not sufficient for you to gain weight.");
-  }
-  return Math.ceil((9000 * weightGainKg) / dailyExcessCalories);
+const dailyExcessCalories =
+  dailyCaloriesOnDiet - dailyCaloriesBasicMetabolicRate;
+
+if (dailyExcessCalories <= 0) {
+  throw new Error(
+    "This diet is not sufficient for you to gain weight.",
+  );
+}
+
+const KCAL_PER_KG_WEIGHT_GAIN = 9000;
+return Math.ceil(
+  (KCAL_PER_KG_WEIGHT_GAIN * weightGainKg) / dailyExcessCalories,
+);
 }
